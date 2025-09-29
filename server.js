@@ -83,7 +83,11 @@ const projectSchema = new mongoose.Schema({
   category: { type: String, enum: ["web", "graphic"] },
   deadline: Date,
   status: { type: String, enum: ["ongoing", "completed"], default: "ongoing" },
-  clientId: String,
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  client: {
+    name: String,
+    email: String,
+  }, 
   createdAt: { type: Date, default: Date.now },
   description: String,
   resources: {
@@ -95,6 +99,25 @@ const projectSchema = new mongoose.Schema({
 
 const Project = mongoose.model("Project", projectSchema);
 
+
+// Kanban Schema
+const kanbanSchema = new mongoose.Schema({
+  id: { type: String, unique: true }, // same as project id
+  name: String,
+  description: String,
+  stage: { type: String, default: "to do" }, // initial stage
+  resources: {
+    images: { type: [String], default: [] },
+    documents: { type: [String], default: [] },
+    links: { type: [String], default: [] },
+  },
+  comments: { type: [String], default: [] }, // initial empty array
+  createdAt: { type: Date, default: Date.now }, // added created date
+});
+
+const Kanban = mongoose.model("Kanban", kanbanSchema);
+
+
 // Create Project
 app.post("/api/projects", async (req, res) => {
   try {
@@ -102,34 +125,59 @@ app.post("/api/projects", async (req, res) => {
 
     if (!clientId) return res.status(400).json({ message: "Client ID is required" });
 
+    const client = await User.findById(clientId);
+    if (!client) return res.status(404).json({ message: "Client not found" });
+
+    const projectId = `project-${Date.now()}`;
+
     const newProject = new Project({
-      id: `project-${Date.now()}`,
+      id: projectId,
       name: topic,
       category,
       deadline,
       status: "ongoing",
       clientId,
+      client: { name: client.name, email: client.email }, 
       createdAt: new Date(),
       description,
       resources,
     });
 
     await newProject.save();
+
+//Create Kanban when crate new project
+    const newKanban = new Kanban({
+      id: projectId,
+      name: topic,
+      description,
+      stage: "to do",
+      resources: {
+        images: resources?.images || [],
+        documents: resources?.documents || [],
+        links: resources?.links || [],
+      },
+      comments: [],
+      createdAt: new Date(),
+    });
+
+    await newKanban.save();
+
     res.json(newProject);
   } catch (err) {
+    console.error("❌ Project creation error:", err); // full error
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get All Projects for a Client
-app.get("/api/projects", async (req, res) => {
+
+// Client's projects
+app.get("/api/projects/client", async (req, res) => {
   try {
     const { clientId } = req.query;
     if (!clientId) return res.status(400).json({ message: "clientId query parameter is required" });
 
     const projects = await Project.find({ clientId: clientId.toString() });
 
-    // Add payments field as empty array if not present
     const formattedProjects = projects.map(p => ({
       ...p.toObject(),
       payments: [],
@@ -143,16 +191,28 @@ app.get("/api/projects", async (req, res) => {
   }
 });
 
-app.get('/api/projects', async (req, res) => {
+//All projects for Admin
+app.get("/api/projects", async (req, res) => {
   try {
-    // Fetch all projects (admin view)
-    const projects = await Project.find().sort({ createdAt: -1 }); // sort newest first
-    res.json(projects);
+    const projects = await Project.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Fetch client details for each project
+    const projectsWithClients = await Promise.all(
+      projects.map(async (p) => {
+        const client = await User.findById(p.clientId).lean();
+        return { ...p, client: client ? { name: client.name, email: client.email } : null };
+      })
+    );
+
+    res.json(projectsWithClients);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
+
+
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
