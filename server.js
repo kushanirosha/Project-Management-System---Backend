@@ -9,12 +9,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB Atlas
+// ---------------- Connect to MongoDB ----------------
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.error("MongoDB Error ❌", err));
 
-// User Schema
+// ---------------- User Schema ----------------
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-// Register Route
+// ---------------- Register Route ----------------
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -54,7 +54,7 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// Login Route
+// ---------------- Login Route ----------------
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -76,7 +76,7 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Project Schema
+// ---------------- Project Schema ----------------
 const projectSchema = new mongoose.Schema({
   id: { type: String, unique: true },
   name: String,
@@ -87,7 +87,7 @@ const projectSchema = new mongoose.Schema({
   client: {
     name: String,
     email: String,
-  }, 
+  },
   createdAt: { type: Date, default: Date.now },
   description: String,
   resources: {
@@ -99,26 +99,30 @@ const projectSchema = new mongoose.Schema({
 
 const Project = mongoose.model("Project", projectSchema);
 
-
-// Kanban Schema
+// ---------------- Kanban Schema ----------------
 const kanbanSchema = new mongoose.Schema({
-  id: { type: String, unique: true }, // same as project id
-  name: String,
+  projectId: { type: String, required: true },
+  name: { type: String, required: true },
   description: String,
-  stage: { type: String, default: "to do" }, // initial stage
+  stage: { type: String, enum: ["to do", "in progress", "done"], default: "to do" },
   resources: {
-    images: { type: [String], default: [] },
-    documents: { type: [String], default: [] },
-    links: { type: [String], default: [] },
+    images: [String],
+    documents: [String],
+    links: [String],
   },
-  comments: { type: [String], default: [] }, // initial empty array
-  createdAt: { type: Date, default: Date.now }, // added created date
+  comments: [
+    {
+      text: String,
+      user: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  createdAt: { type: Date, default: Date.now },
 });
 
 const Kanban = mongoose.model("Kanban", kanbanSchema);
 
-
-// Create Project
+// ---------------- Create Project + Kanban ----------------
 app.post("/api/projects", async (req, res) => {
   try {
     const { topic, description, resources, deadline, category, clientId } = req.body;
@@ -130,6 +134,7 @@ app.post("/api/projects", async (req, res) => {
 
     const projectId = `project-${Date.now()}`;
 
+    // 1️⃣ Create Project
     const newProject = new Project({
       id: projectId,
       name: topic,
@@ -137,17 +142,17 @@ app.post("/api/projects", async (req, res) => {
       deadline,
       status: "ongoing",
       clientId,
-      client: { name: client.name, email: client.email }, 
+      client: { name: client.name, email: client.email },
       createdAt: new Date(),
       description,
-      resources,
+      resources: resources || { images: [], documents: [], links: [] },
     });
-
     await newProject.save();
+    console.log("✅ Project created:", projectId);
 
-//Create Kanban when crate new project
+    // 2️⃣ Create Kanban for the project
     const newKanban = new Kanban({
-      id: projectId,
+      projectId,
       name: topic,
       description,
       stage: "to do",
@@ -159,18 +164,17 @@ app.post("/api/projects", async (req, res) => {
       comments: [],
       createdAt: new Date(),
     });
+    const savedKanban = await newKanban.save();
+    console.log("✅ Kanban created for project:", projectId);
 
-    await newKanban.save();
-
-    res.json(newProject);
+    res.json({ project: newProject, kanban: savedKanban });
   } catch (err) {
-    console.error("❌ Project creation error:", err); // full error
+    console.error("❌ Project creation error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-
-// Client's projects
+// ---------------- Client's Projects ----------------
 app.get("/api/projects/client", async (req, res) => {
   try {
     const { clientId } = req.query;
@@ -191,14 +195,11 @@ app.get("/api/projects/client", async (req, res) => {
   }
 });
 
-//All projects for Admin
+// ---------------- All Projects for Admin ----------------
 app.get("/api/projects", async (req, res) => {
   try {
-    const projects = await Project.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const projects = await Project.find().sort({ createdAt: -1 }).lean();
 
-    // Fetch client details for each project
     const projectsWithClients = await Promise.all(
       projects.map(async (p) => {
         const client = await User.findById(p.clientId).lean();
@@ -212,8 +213,7 @@ app.get("/api/projects", async (req, res) => {
   }
 });
 
-
-
+// ---------------- Server ----------------
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
