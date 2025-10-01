@@ -14,8 +14,12 @@ const { notFound, errorHandler } = require("./middlewares/errorHandler");
 dotenv.config();
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Connect to MongoDB
@@ -26,11 +30,9 @@ app.use("/api", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", kanbanRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/projects", chatRoutes); 
 
-// Chat routes (namespaced)
-app.use("/api/projects/:projectId/chat", chatRoutes);
-
-// Middlewares
+// Error handling middlewares
 app.use(notFound);
 app.use(errorHandler);
 
