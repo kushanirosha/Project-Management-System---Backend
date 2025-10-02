@@ -1,23 +1,31 @@
 const paymentService = require("../services/paymentService");
 
+// ---------------- Create Payment ----------------
 const createPayment = async (req, res, next) => {
   try {
-    console.log("📥 Payment create request:", req.body); // Debug log
+    const { projectId, amount, description } = req.body;
 
-    const { projectId, amount, description, status } = req.body;
     if (!projectId || !amount) {
       return res.status(400).json({ error: "projectId and amount are required" });
     }
 
-    const payment = await paymentService.createPayment(req.body);
+    const paymentData = {
+      projectId,
+      amount: Number(amount),
+      description,
+      quotationUrl: req.file ? `/uploads/quotations/${req.file.filename}` : null,
+      status: "pending",
+      receipts: [],
+    };
+
+    const payment = await paymentService.createPayment(paymentData);
     res.status(201).json(payment);
   } catch (err) {
-    console.error("❌ Error creating payment:", err);
     next(err);
   }
 };
 
-
+// ---------------- Get Payments by Project ----------------
 const getPaymentsByProject = async (req, res, next) => {
   try {
     const payments = await paymentService.getPaymentsByProject(req.query.projectId);
@@ -27,13 +35,22 @@ const getPaymentsByProject = async (req, res, next) => {
   }
 };
 
+// ---------------- Upload Receipt ----------------
 const uploadReceipt = async (req, res, next) => {
   try {
+    const { amount } = req.body;
+    const paidAmount = parseFloat(amount);
+
+    if (!paidAmount || paidAmount <= 0) {
+      return res.status(400).json({ message: "Invalid amount paid" });
+    }
+
     const payment = await paymentService.uploadReceipt(req.params.id, {
-      amount: req.body.amount,
-      receiptUrl: req.file ? `/uploads/${req.file.filename}` : undefined,
+      amountPaid: paidAmount,
+      receiptUrl: req.file ? `/uploads/receipts/${req.file.filename}` : undefined,
     });
-    res.json(payment);
+
+    res.json(payment); // Returns payment with updated receipts array
   } catch (err) {
     next(err);
   }

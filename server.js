@@ -10,6 +10,7 @@ const kanbanRoutes = require("./routes/kanbanRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const { notFound, errorHandler } = require("./middlewares/errorHandler");
+const authRoutes = require("./routes/auth");
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", kanbanRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/projects", chatRoutes); 
+app.use("/api/auth", authRoutes);
 
 // Error handling middlewares
 app.use(notFound);

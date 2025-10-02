@@ -1,20 +1,23 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
-const paymentController = require("../controllers/paymentController");
+const { createPayment, getPaymentsByProject, uploadReceipt } = require("../controllers/paymentController");
 
 const router = express.Router();
 
-// Multer storage setup
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  destination: (req, file, cb) => {
+    const folder = file.fieldname === "quotation" ? "uploads/quotations" : "uploads/receipts";
+    cb(null, folder);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
+
 const upload = multer({ storage });
 
-// Routes
-router.post("/", paymentController.createPayment);
-router.get("/", paymentController.getPaymentsByProject);
-router.put("/:id/receipt", upload.single("receipt"), paymentController.uploadReceipt);
+router.get("/", getPaymentsByProject);
+router.post("/", upload.single("quotation"), createPayment);
+router.put("/:id/receipt", upload.single("receipt"), uploadReceipt);
 
 module.exports = router;

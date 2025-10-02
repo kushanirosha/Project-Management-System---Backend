@@ -21,14 +21,14 @@ const createMessage = async (req, res, next) => {
 
   try {
     const message = await chatService.addMessage({
-      projectId,
-      content,
-      senderId,
-      senderName,
-      senderRole,
-      type: req.file ? (req.file.mimetype.startsWith("image/") ? "image" : "document") : type,
-      attachmentUrl,
-      replyTo: replyTo || null,
+      projectId: req.params.projectId,
+      content: req.body.content,
+      senderId: req.body.senderId,
+      senderName: req.body.senderName, 
+      senderRole: req.body.senderRole, 
+      type: req.body.type || "text",
+      attachmentUrl: req.file ? `/uploads/${req.file.filename}` : null,
+      replyTo: req.body.replyTo || null,
     });
     res.json(message);
   } catch (err) {
