@@ -11,3 +11,6 @@ exports.loginUser = async (email, password) => {
   if (!user || user.password !== password) throw new Error("Invalid credentials");
   return user;
 };
+
+exports.getAllUsers = () => userRepo.findAllUsers();
+exports.getAllClients = () => userRepo.findClients(); 

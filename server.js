@@ -1,6 +1,8 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const path = require("path");
 const connectDB = require("./config/db");
 
@@ -12,7 +14,6 @@ const chatRoutes = require("./routes/chatRoutes");
 const { notFound, errorHandler } = require("./middlewares/errorHandler");
 const authRoutes = require("./routes/auth");
 
-dotenv.config();
 
 const app = express();
 

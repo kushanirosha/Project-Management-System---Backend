@@ -6,8 +6,7 @@ const projectSchema = new mongoose.Schema({
   category: { type: String, enum: ["web", "graphic"] },
   deadline: Date,
   status: { type: String, enum: ["ongoing", "completed"], default: "ongoing" },
-  clientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  client: { name: String, email: String },
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Reference to User
   createdAt: { type: Date, default: Date.now },
   description: String,
   resources: { images: [String], documents: [String], links: [String] },
