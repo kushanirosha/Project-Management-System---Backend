@@ -4,3 +4,4 @@ exports.createTask = (taskData) => new Kanban(taskData).save();
 exports.updateTask = (taskId, updates) => Kanban.findByIdAndUpdate(taskId, updates, { new: true });
 exports.getTasksByProject = (projectId) => Kanban.find({ projectId });
 exports.findTaskById = (taskId) => Kanban.findById(taskId);
+exports.findTasksByProject = (projectId) => Kanban.find({ projectId });
