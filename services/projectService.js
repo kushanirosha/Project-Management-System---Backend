@@ -59,3 +59,19 @@ exports.getProjectsByClient = async (clientId) => {
     })
   );
 };
+
+
+exports.updateProjectStatus = async (projectId, status) => {
+  const project = await projectRepo.updateProject(projectId, {
+    status,
+    updatedAt: new Date(),
+  });
+  return project;
+};
+
+
+exports.findProjectById = async (id) => {
+  const project = await require("../repositories/projectRepository").findProjectById(id);
+  return project;
+};
+

@@ -27,6 +27,7 @@ exports.addComment = async (req, res) => {
   }
 };
 
+// Get all tasks for a project
 exports.getTasksByProject = async (req, res) => {
   try {
     const tasks = await kanbanService.getTasksByProject(req.params.projectId);

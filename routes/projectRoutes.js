@@ -7,8 +7,10 @@ const kanbanController = require("../controllers/kanbanController");
 router.post("/", projectController.createProject);
 router.get("/", projectController.getProjectsForAdmin);
 router.get("/client", projectController.getProjectsByClient);
+router.put("/:projectId", projectController.updateProjectStatus);
+router.get("/:projectId", projectController.getProjectById);
 
-// Tasks
+// Tasks under a project
 router.post("/:projectId/tasks", kanbanController.createTask);
 router.get("/:projectId/tasks", kanbanController.getTasksByProject);
 

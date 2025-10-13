@@ -28,3 +28,37 @@ exports.getProjectsByClient = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.updateProjectStatus = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { status } = req.body;
+
+    if (!status) return res.status(400).json({ message: "Status is required" });
+
+    const project = await projectService.updateProjectStatus(projectId, status);
+
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getProjectById = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const project = await projectService.findProjectById(projectId);
+
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // Optionally populate client info
+    const client = await require("../repositories/userRepository").findUserById(project.clientId);
+    res.json({ ...project.toObject(), client: client ? client.toObject() : null });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
