@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Ensure uploads folder exists
-const uploadDir = path.join(__dirname, "../uploads");
+const uploadDir = path.join(__dirname, "../uploads/chat");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
 // Multer config

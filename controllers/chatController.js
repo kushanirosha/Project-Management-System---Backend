@@ -23,7 +23,7 @@ const createMessage = async (req, res, next) => {
       const fileExt = path.extname(req.file.originalname).toLowerCase();
       const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
       type = isImage ? "image" : "document";
-      attachmentUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+      attachmentUrl = `${req.protocol}://${req.get("host")}/uploads/chat/${req.file.filename}`;
     }
 
     const message = await chatService.addMessage({
