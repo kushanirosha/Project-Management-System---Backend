@@ -1,4 +1,5 @@
 const chatService = require("../services/chatService");
+const path = require("path");
 
 const getMessages = async (req, res, next) => {
   const { projectId } = req.params;
@@ -11,26 +12,32 @@ const getMessages = async (req, res, next) => {
 };
 
 const createMessage = async (req, res, next) => {
-  const { projectId } = req.params;
-  const { content, senderId, senderName, senderRole, type, replyTo } = req.body;
-  let attachmentUrl = null;
-
-  if (req.file) {
-    attachmentUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-  }
-
   try {
+    const { projectId } = req.params;
+    const { content, senderId, senderName, senderRole, replyTo } = req.body;
+
+    let type = "text";
+    let attachmentUrl = null;
+
+    if (req.file) {
+      const fileExt = path.extname(req.file.originalname).toLowerCase();
+      const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt);
+      type = isImage ? "image" : "document";
+      attachmentUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    }
+
     const message = await chatService.addMessage({
-      projectId: req.params.projectId,
-      content: req.body.content,
-      senderId: req.body.senderId,
-      senderName: req.body.senderName, 
-      senderRole: req.body.senderRole, 
-      type: req.body.type || "text",
-      attachmentUrl: req.file ? `/uploads/${req.file.filename}` : null,
-      replyTo: req.body.replyTo || null,
+      projectId,
+      content: content || "",
+      senderId,
+      senderName,
+      senderRole,
+      type,
+      attachmentUrl,
+      replyTo: replyTo || null,
     });
-    res.json(message);
+
+    res.status(201).json(message);
   } catch (err) {
     next(err);
   }

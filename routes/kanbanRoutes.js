@@ -4,14 +4,15 @@ const path = require("path");
 const multer = require("multer");
 const kanbanController = require("../controllers/kanbanController");
 
-// Multer setup
+// 📦 Multer file storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, "..", "uploads")),
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
 });
+
 const upload = multer({ storage });
 
-// POST create task (with files)
+// ✅ Create a task (with optional files)
 router.post(
   "/:projectId/tasks",
   upload.fields([
@@ -21,13 +22,13 @@ router.post(
   kanbanController.createTask
 );
 
-// GET tasks by project
-router.get("/project/:projectId", kanbanController.getTasksByProject);
+// ✅ Get all tasks for a specific project
+router.get("/:projectId/tasks", kanbanController.getTasksByProject);
 
-// PUT update task
-router.put("/:taskId", kanbanController.updateTask);
+// ✅ Update a task
+router.put("/tasks/:taskId", kanbanController.updateTask);
 
-// POST add comment
-router.post("/:taskId/comments", kanbanController.addComment);
+// ✅ Add a comment to a task
+router.post("/tasks/:taskId/comments", kanbanController.addComment);
 
 module.exports = router;

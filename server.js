@@ -19,23 +19,23 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // for non-multipart routes
+app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Connect to MongoDB
+// Connect MongoDB
 connectDB(process.env.MONGO_URI);
 
-// Routes
+// API Routes
 app.use("/api", userRoutes);
 app.use("/api/projects", projectRoutes);
-app.use("/api/projects", kanbanRoutes); // ✅ tasks routes with Multer
+app.use("/api/kanban", kanbanRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api/projects", chatRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/auth", authRoutes);
 
-// Error handling
+// Error Handling
 app.use(notFound);
 app.use(errorHandler);
 
