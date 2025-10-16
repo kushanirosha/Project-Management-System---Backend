@@ -2,11 +2,6 @@ const Kanban = require("../models/Kanban");
 
 exports.createTask = async (req, res) => {
   try {
-    console.log("✅ Incoming request received");
-    console.log("Body:", req.body);
-    console.log("Files:", req.files);
-    console.log("Params:", req.params);
-
     const { projectId } = req.params;
 
     const title = req.body.title;
